@@ -1,0 +1,14 @@
+<header class="topbar">
+  <a class="brand" routerLink="/schedule">University Portal</a>
+
+  @if (auth.user(); as u) {
+    <nav aria-label="Main">
+      @for (item of visibleItems(); track item.label) {
+        <a [routerLink]="item.route" routerLinkActive="active">{{ item.label }}</a>
+      }
+    </nav>
+
+    <span>{{ u.fullName }} · {{ u.role }}</span>
+    <button type="button" (click)="logout()">Sign out</button>
+  }
+</header>

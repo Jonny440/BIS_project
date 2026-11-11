@@ -1,0 +1,81 @@
+<main>
+  <h1>Messages</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+
+  <h2>Compose</h2>
+  <form (submit)="$event.preventDefault(); send(recipient.value, draft())">
+    <label>
+      To
+      <select #recipient>
+        @for (c of contacts(); track c.id) {
+          <option [value]="c.username">{{ c.fullName }} ({{ c.username }})</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Message
+      <textarea
+        rows="3"
+        [value]="draft()"
+        (input)="draft.set($any($event.target).value)"
+      ></textarea>
+    </label>
+
+    <button type="submit">Send</button>
+  </form>
+
+  <h2>Inbox</h2>
+  @if (inbox().length) {
+    <table>
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>Message</th>
+          <th>Received</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of inbox(); track m.sentAt + m.sender + m.body) {
+          <tr>
+            <td>{{ m.sender }}</td>
+            <td>{{ m.body }}</td>
+            <td>{{ m.sentAt }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else if (loaded()) {
+    <p>No messages.</p>
+  }
+
+  <h2>Sent</h2>
+  @if (sent().length) {
+    <table>
+      <thead>
+        <tr>
+          <th>To</th>
+          <th>Message</th>
+          <th>Sent</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of sent(); track m.sentAt + m.recipient + m.body) {
+          <tr>
+            <td>{{ m.recipient }}</td>
+            <td>{{ m.body }}</td>
+            <td>{{ m.sentAt }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else if (loaded()) {
+    <p>Nothing sent yet.</p>
+  }
+</main>

@@ -1,0 +1,54 @@
+<main>
+  <h1>Register for course</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+
+  @if (data(); as d) {
+    <p>Credits in use: {{ d.credits }} / {{ d.limit }}</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Course</th>
+          <th>Credits</th>
+          <th>For</th>
+          <th>Instructor</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of d.courses; track c.code) {
+          <tr>
+            <td>{{ c.code }}</td>
+            <td>{{ c.title }}</td>
+            <td>{{ c.credits }}</td>
+            <td>
+              {{ c.targetMajor }}
+              @if (c.targetYear) {
+                · year {{ c.targetYear }}
+              }
+            </td>
+            <td>{{ c.instructor }}</td>
+            <td>
+              @if (c.enrolled) {
+                Registered
+              } @else if (c.eligible) {
+                <button type="button" (click)="enroll(c.code)">Register</button>
+              } @else {
+                {{ c.reason }}
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else if (!error()) {
+    <p>Loading…</p>
+  }
+</main>

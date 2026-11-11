@@ -1,0 +1,25 @@
+<main class="login">
+  <h1>University Portal</h1>
+  <p>Sign in with your university account.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+
+    <label for="username">Username</label>
+    <input id="username" type="text" formControlName="username" autocomplete="username" autofocus />
+
+    <label for="password">Password</label>
+    <input
+      id="password"
+      type="password"
+      formControlName="password"
+      autocomplete="current-password"
+    />
+
+    <button type="submit" [disabled]="loading()">
+      {{ loading() ? 'Signing in…' : 'Sign in' }}
+    </button>
+  </form>
+</main>

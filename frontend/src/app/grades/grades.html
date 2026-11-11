@@ -1,0 +1,93 @@
+<main>
+  <h1>Grades</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+
+  @if (isTeacher()) {
+    @if (teacherCourses(); as courses) {
+      @if (!courses.length) {
+        <p>You do not teach any course.</p>
+      }
+      @for (c of courses; track c.code) {
+        <h2>{{ c.code }} — {{ c.title }}</h2>
+        @if (c.students.length) {
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Att 1</th>
+                <th>Att 2</th>
+                <th>Exam</th>
+                <th>Total</th>
+                <th>Grade</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of c.students; track s.id) {
+                <tr>
+                  <td>{{ s.fullName }}</td>
+                  <td><input #a1 type="number" min="0" max="30" [value]="s.att1 ?? 0" /></td>
+                  <td><input #a2 type="number" min="0" max="30" [value]="s.att2 ?? 0" /></td>
+                  <td><input #fin type="number" min="0" max="40" [value]="s.finalScore ?? 0" /></td>
+                  <td>{{ s.total ?? '—' }}</td>
+                  <td>{{ s.letter ?? '—' }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      (click)="save(c.code, s.id, a1.valueAsNumber, a2.valueAsNumber, fin.valueAsNumber)"
+                    >
+                      Save
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <p>No students registered.</p>
+        }
+      }
+    } @else if (!error()) {
+      <p>Loading…</p>
+    }
+  } @else {
+    @if (rows(); as list) {
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Course</th>
+            <th>Credits</th>
+            <th>Att 1</th>
+            <th>Att 2</th>
+            <th>Exam</th>
+            <th>Total</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of list; track r.code) {
+            <tr>
+              <td>{{ r.code }}</td>
+              <td>{{ r.title }}</td>
+              <td>{{ r.credits }}</td>
+              <td>{{ r.att1 ?? '—' }}</td>
+              <td>{{ r.att2 ?? '—' }}</td>
+              <td>{{ r.finalScore ?? '—' }}</td>
+              <td>{{ r.total ?? '—' }}</td>
+              <td>{{ r.letter ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else if (!error()) {
+      <p>Loading…</p>
+    }
+  }
+</main>

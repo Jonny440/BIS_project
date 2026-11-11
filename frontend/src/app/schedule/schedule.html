@@ -1,0 +1,102 @@
+<main>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (data(); as d) {
+    <h1>My schedule</h1>
+    <p>
+      {{ user()?.fullName }}
+      @if (user()?.program) {
+        — {{ user()?.program }}, year {{ user()?.year }}
+      } @else if (user()?.department) {
+        — {{ user()?.department }}
+      }
+    </p>
+
+    <h2>Today</h2>
+    @if (todaySessions().length) {
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Course</th>
+            <th>Type</th>
+            <th>Room</th>
+            <th>Instructor</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of todaySessions(); track s.code + s.start) {
+            <tr>
+              <td>{{ s.start }}–{{ s.end }}</td>
+              <td>{{ s.code }} {{ s.title }}</td>
+              <td>{{ s.kind }}</td>
+              <td>{{ s.room }}</td>
+              <td>{{ s.instructor }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p>No classes today.</p>
+    }
+
+    <h2>Week</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          @for (day of days; track day.value) {
+            <th>{{ day.label }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (hour of hours(); track hour) {
+          <tr>
+            <th>{{ hourLabel(hour) }}</th>
+            @for (day of days; track day.value) {
+              <td>
+                @for (s of cell(day.value, hour); track s.code + s.start) {
+                  <div>
+                    <strong>{{ s.code }}</strong> {{ s.kind }}
+                    <small>{{ s.start }}–{{ s.end }} · {{ s.room }}</small>
+                  </div>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <h2>My courses</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Course</th>
+          <th>Credits</th>
+          <th>Instructor</th>
+          <th>Score</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of d.courses; track c.code) {
+          <tr>
+            <td>{{ c.code }}</td>
+            <td>{{ c.title }}</td>
+            <td>{{ c.credits }}</td>
+            <td>{{ c.instructor }}</td>
+            <td>{{ c.score ?? '—' }}</td>
+            <td>{{ c.grade ?? '—' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else if (!error()) {
+    <p>Loading…</p>
+  }
+</main>

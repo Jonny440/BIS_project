@@ -1,0 +1,76 @@
+<main>
+  <h1>Library</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+
+  @if (data(); as d) {
+    <h2>Books</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>ISBN</th>
+          <th>Available</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (b of d.books; track b.id) {
+          <tr>
+            <td>{{ b.title }}</td>
+            <td>{{ b.author }}</td>
+            <td>{{ b.isbn }}</td>
+            <td>{{ b.available }} / {{ b.copies }}</td>
+            <td>
+              @if (b.available > 0) {
+                <button type="button" (click)="borrow(b.id, b.title)">Borrow</button>
+              } @else {
+                None left
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <h2>My loans</h2>
+    @if (d.loans.length) {
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Borrowed</th>
+            <th>Due</th>
+            <th>Returned</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of d.loans; track l.id) {
+            <tr>
+              <td>{{ l.title }}</td>
+              <td>{{ l.borrowedAt }}</td>
+              <td>{{ l.dueAt }}</td>
+              <td>{{ l.returnedAt ?? '—' }}</td>
+              <td>
+                @if (!l.returnedAt) {
+                  <button type="button" (click)="giveBack(l.id)">Return</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p>No loans yet.</p>
+    }
+  } @else if (!error()) {
+    <p>Loading…</p>
+  }
+</main>

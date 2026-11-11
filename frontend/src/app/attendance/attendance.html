@@ -1,0 +1,107 @@
+<main>
+  <h1>Attendance</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p role="status">{{ notice() }}</p>
+  }
+
+  @if (isTeacher()) {
+    @if (sessions().length) {
+      <h2>Mark attendance</h2>
+      <form (submit)="$event.preventDefault(); mark(date.value, student.value, status.value)">
+        <label>
+          Session
+          <select
+            #session
+            (change)="selectedSessionId.set(+$any($event.target).value)"
+            [value]="selectedSession()?.id"
+          >
+            @for (s of sessions(); track s.id) {
+              <option [value]="s.id">
+                {{ s.code }} · {{ s.title }} · {{ dayName(s.day) }} {{ s.start }}–{{ s.end }}
+              </option>
+            }
+          </select>
+        </label>
+
+        <label>Date <input #date type="date" [value]="today" /></label>
+
+        <label>
+          Student
+          <select #student>
+            @for (s of students(); track s.id) {
+              <option [value]="s.id">{{ s.fullName }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Status
+          <select #status>
+            <option value="PRESENT">PRESENT</option>
+            <option value="ABSENT">ABSENT</option>
+            <option value="LATE">LATE</option>
+          </select>
+        </label>
+
+        <button type="submit">Save</button>
+      </form>
+    } @else if (!error()) {
+      <p>You have no sessions to mark.</p>
+    }
+  } @else {
+    @if (summary(); as list) {
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Course</th>
+            <th>Present</th>
+            <th>Records</th>
+            <th>Attendance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of list; track r.code) {
+            <tr>
+              <td>{{ r.code }}</td>
+              <td>{{ r.title }}</td>
+              <td>{{ r.present }}</td>
+              <td>{{ r.total }}</td>
+              <td>{{ percent(r.present, r.total) }}%</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else if (!error()) {
+      <p>Loading…</p>
+    }
+  }
+
+  @if (records().length) {
+    <h2>Recent records</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Course</th>
+          <th>Student</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of records(); track r.date + r.code + r.student) {
+          <tr>
+            <td>{{ r.date }}</td>
+            <td>{{ r.code }}</td>
+            <td>{{ r.student }}</td>
+            <td>{{ r.status }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</main>

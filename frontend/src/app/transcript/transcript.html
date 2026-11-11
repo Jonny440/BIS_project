@@ -1,0 +1,42 @@
+<main>
+  <h1>Transcript</h1>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (data(); as d) {
+    <p>Credits earned: {{ d.credits }} · GPA: {{ d.gpa }}</p>
+
+    @if (d.entries.length) {
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Course</th>
+            <th>Credits</th>
+            <th>Grade</th>
+            <th>Points</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of d.entries; track e.code) {
+            <tr>
+              <td>{{ e.code }}</td>
+              <td>{{ e.title }}</td>
+              <td>{{ e.credits }}</td>
+              <td>{{ e.letter }}</td>
+              <td>{{ e.points }}</td>
+              <td>{{ e.passed ? 'Passed' : 'Failed' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p>No graded courses yet.</p>
+    }
+  } @else if (!error()) {
+    <p>Loading…</p>
+  }
+</main>
