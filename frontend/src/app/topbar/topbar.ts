@@ -18,6 +18,7 @@ export class Topbar {
   private readonly router = inject(Router);
 
   private readonly items: NavItem[] = [
+    { label: 'Dashboard', route: '/dashboard' },
     { label: 'Schedule', route: '/schedule' },
     { label: 'Register for Course', route: '/register', roles: ['STUDENT'] },
     { label: 'Grades', route: '/grades', roles: ['STUDENT', 'TEACHER'] },

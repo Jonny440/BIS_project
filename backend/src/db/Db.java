@@ -93,6 +93,10 @@ public final class Db {
     public record MessageRow(String sender, String recipient, String body, String sentAt) {
     }
 
+    /** One entry of the university to-do list. */
+    public record TaskRow(long id, String title, String dueDate, String priority, boolean done) {
+    }
+
     private static final String[] SCHEMA = {
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -201,6 +205,15 @@ public final class Db {
                 sent_at      TEXT NOT NULL
             )
             """,
+            """
+            CREATE TABLE IF NOT EXISTS tasks (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                title    TEXT NOT NULL,
+                due_date TEXT NOT NULL,
+                priority TEXT NOT NULL CHECK (priority IN ('HIGH', 'MEDIUM', 'LOW')),
+                done     INTEGER NOT NULL DEFAULT 0
+            )
+            """,
             "CREATE INDEX IF NOT EXISTS idx_sessions_course ON sessions(course_id)",
             "CREATE INDEX IF NOT EXISTS idx_enrollments_student ON enrollments(student_id)",
             "CREATE INDEX IF NOT EXISTS idx_instructors_teacher ON course_instructors(teacher_id)",
@@ -266,7 +279,24 @@ public final class Db {
             for (String ddl : SCHEMA) {
                 statement.execute(ddl);
             }
+            // Databases created before the to-do list had a "done" flag get it added.
+            if (!hasColumn(connection, "tasks", "done")) {
+                statement.execute("ALTER TABLE tasks ADD COLUMN done INTEGER NOT NULL DEFAULT 0");
+            }
         }
+    }
+
+    private static boolean hasColumn(Connection connection, String table, String column)
+            throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                if (column.equalsIgnoreCase(rs.getString("name"))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void seedIfEmpty() throws SQLException {
@@ -284,6 +314,9 @@ public final class Db {
                 }
                 if (count(connection, "messages") == 0) {
                     insertMessageSeed(connection);
+                }
+                if (count(connection, "tasks") == 0) {
+                    insertTaskSeed(connection);
                 }
                 connection.commit();
             } catch (SQLException e) {
@@ -588,6 +621,24 @@ public final class Db {
         }
     }
 
+    private static void insertTaskSeed(Connection connection) throws SQLException {
+        insertTask(connection, "Pass the fluorography", "2026-12-01", "HIGH");
+        insertTask(connection, "Renew the dormitory documents", "2026-12-15", "HIGH");
+        insertTask(connection, "Pass the internship", "2027-02-01", "MEDIUM");
+        insertTask(connection, "Defend the diploma work", "2027-06-15", "LOW");
+    }
+
+    private static void insertTask(Connection connection, String title, String dueDate, String priority)
+            throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "INSERT INTO tasks (title, due_date, priority) VALUES (?, ?, ?)")) {
+            ps.setString(1, title);
+            ps.setString(2, dueDate);
+            ps.setString(3, priority);
+            ps.executeUpdate();
+        }
+    }
+
     // ─── Queries ─────────────────────────────────────────────
 
     public Optional<Account> login(String username, String password) throws SQLException {
@@ -686,6 +737,56 @@ public final class Db {
             }
         }
         return rows;
+    }
+
+    public List<TaskRow> tasks() throws SQLException {
+        String sql = "SELECT id, title, due_date, priority, done FROM tasks"
+                + " ORDER BY done, due_date, id";
+        List<TaskRow> rows = new ArrayList<>();
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                rows.add(new TaskRow(rs.getLong("id"), rs.getString("title"),
+                        rs.getString("due_date"), rs.getString("priority"),
+                        rs.getInt("done") != 0));
+            }
+        }
+        return rows;
+    }
+
+    public void addTask(String title, String dueDate, String priority) throws SQLException {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("Task text is required");
+        }
+        if (title.length() > 200) {
+            throw new IllegalArgumentException("Task text is too long");
+        }
+        if (dueDate == null || !dueDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Deadline must look like 2026-12-01");
+        }
+        if (!"HIGH".equals(priority) && !"MEDIUM".equals(priority) && !"LOW".equals(priority)) {
+            throw new IllegalArgumentException("Priority must be HIGH, MEDIUM or LOW");
+        }
+
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(
+                     "INSERT INTO tasks (title, due_date, priority) VALUES (?, ?, ?)")) {
+            ps.setString(1, title.trim());
+            ps.setString(2, dueDate);
+            ps.setString(3, priority);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean setTaskDone(long id, boolean done) throws SQLException {
+        try (Connection connection = connect();
+             PreparedStatement ps = connection.prepareStatement(
+                     "UPDATE tasks SET done = ? WHERE id = ?")) {
+            ps.setInt(1, done ? 1 : 0);
+            ps.setLong(2, id);
+            return ps.executeUpdate() > 0;
+        }
     }
 
     // ─── Registration ────────────────────────────────────────

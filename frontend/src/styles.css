@@ -81,3 +81,32 @@ td small {
   display: block;
   color: #555;
 }
+
+/* To-do list */
+.add-task {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.is-done td:first-child {
+  color: #777;
+  text-decoration: line-through;
+}
+
+/* To-do priority colours */
+[data-priority='HIGH'] {
+  background: #f8d7da;
+  color: #8a1f1f;
+}
+
+[data-priority='MEDIUM'] {
+  background: #fff3cd;
+  color: #7a5b00;
+}
+
+[data-priority='LOW'] {
+  background: #d4edda;
+  color: #1d6b34;
+}

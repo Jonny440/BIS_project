@@ -2,8 +2,8 @@
 
 University management portal: a Java backend, a SQLite database and a single-page Angular front end.
 
-Students sign in to see their timetable, register for courses, and follow their grades, transcript,
-attendance, library loans and messages. Teachers see the courses they teach, enter marks and mark
+Students sign in to a dashboard with their university to-do list, then see their timetable, register for
+courses, and follow their grades, transcript, attendance, library loans and messages. Teachers see the courses they teach, enter marks and mark
 attendance. Managers and administrators see every course.
 
 ```
@@ -84,6 +84,9 @@ Passwords are stored as salted PBKDF2 hashes, never as plain text.
 | POST   | `/api/library/return` | Bearer         | `{loanId}`                                                |
 | GET    | `/api/messages`       | Bearer         | `{inbox, sent, contacts}`                                 |
 | POST   | `/api/messages`       | Bearer         | `{recipient, body}`                                       |
+| GET    | `/api/tasks`          | Bearer         | `{tasks}` — to-do list with deadline, priority and state  |
+| POST   | `/api/tasks`          | Bearer         | `{title, dueDate, priority}` → adds a task                |
+| POST   | `/api/tasks/done`     | Bearer         | `{id, done}` → ticks a task off or reopens it             |
 
 Tokens are random session ids kept in backend memory, so restarting the server signs everybody out.
 
@@ -105,6 +108,7 @@ Deleting the file resets the demo data.
 | `library_books`      | title, author, ISBN, number of copies                          |
 | `library_loans`      | book, borrower, borrowed / due / returned dates                |
 | `messages`           | sender, recipient, text and timestamp                         |
+| `tasks`              | to-do list: title, deadline, HIGH / MEDIUM / LOW priority, done |
 
 Total score and letter grade follow the rules in `courses.Mark`.
 
@@ -118,6 +122,7 @@ backend/src
 frontend/src/app
   core/         auth, schedule and portal services, API error type, guards
   login/        sign-in page
+  dashboard/    to-do list with deadlines and coloured priorities
   schedule/     today's classes, weekly timetable, enrolled courses
   register/     course registration
   grades/       own marks (student) or mark entry (teacher)

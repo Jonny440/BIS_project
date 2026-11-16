@@ -2,11 +2,16 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth.guard';
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'schedule' },
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   {
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () => import('./login/login').then((m) => m.Login),
+  },
+  {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
   },
   {
     path: 'schedule',

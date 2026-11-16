@@ -33,7 +33,7 @@ export class Login {
     try {
       const { username, password } = this.form.getRawValue();
       await this.auth.login(username, password);
-      await this.router.navigateByUrl('/schedule');
+      await this.router.navigateByUrl('/dashboard');
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Something went wrong. Please try again.');
     } finally {

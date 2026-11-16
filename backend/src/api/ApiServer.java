@@ -18,6 +18,7 @@ import db.Db.MessageRow;
 import db.Db.SessionRow;
 import db.Db.StudentMark;
 import db.Db.StudentProfile;
+import db.Db.TaskRow;
 import db.Db.TeacherCourse;
 import db.Db.TranscriptEntry;
 
@@ -26,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,6 +56,9 @@ import java.util.concurrent.Executors;
  * POST /api/library/return  {"loanId"}
  * GET  /api/messages        {inbox, sent, contacts}
  * POST /api/messages        {"recipient", "body"}
+ * GET  /api/tasks           {tasks} — university to-do list
+ * POST /api/tasks           {"title", "dueDate", "priority"}
+ * POST /api/tasks/done      {"id", "done"}
  */
 public final class ApiServer {
 
@@ -128,6 +133,9 @@ public final class ApiServer {
                 case "POST /api/library/borrow" -> borrow(exchange);
                 case "POST /api/library/return" -> returnLoan(exchange);
                 case "GET /api/messages" -> messages(exchange);
+                case "GET /api/tasks" -> tasks(exchange);
+                case "POST /api/tasks" -> addTask(exchange);
+                case "POST /api/tasks/done" -> setTaskDone(exchange);
                 case "POST /api/messages" -> sendMessage(exchange);
                 default -> error(exchange, 404, "Not found");
             }
@@ -610,6 +618,54 @@ public final class ApiServer {
         item.put("body", row.body());
         item.put("sentAt", row.sentAt());
         return item;
+    }
+
+    // ─── To-do list ──────────────────────────────────────────
+
+    private void tasks(HttpExchange exchange) throws Exception {
+        require(exchange);
+        send(exchange, 200, tasksPayload());
+    }
+
+    private void addTask(HttpExchange exchange) throws Exception {
+        require(exchange);
+
+        Map<?, ?> body = readObject(exchange);
+        db.addTask(text(body.get("title")), text(body.get("dueDate")),
+                text(body.get("priority")).toUpperCase());
+        send(exchange, 201, tasksPayload());
+    }
+
+    private void setTaskDone(HttpExchange exchange) throws Exception {
+        require(exchange);
+
+        Map<?, ?> body = readObject(exchange);
+        Double id = number(body.get("id"));
+        if (id == null || !(body.get("done") instanceof Boolean done)) {
+            throw new IllegalArgumentException("Task and state are required");
+        }
+        if (!db.setTaskDone(id.longValue(), done)) {
+            error(exchange, 404, "Task not found");
+            return;
+        }
+        send(exchange, 200, tasksPayload());
+    }
+
+    private Map<String, Object> tasksPayload() throws SQLException {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (TaskRow task : db.tasks()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", task.id());
+            item.put("title", task.title());
+            item.put("dueDate", task.dueDate());
+            item.put("priority", task.priority());
+            item.put("done", task.done());
+            rows.add(item);
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("tasks", rows);
+        return payload;
     }
 
     // ─── Helpers ─────────────────────────────────────────────

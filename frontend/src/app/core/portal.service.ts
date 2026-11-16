@@ -142,6 +142,20 @@ export interface MessagesData {
   contacts: Contact[];
 }
 
+export type Priority = 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface PortalTask {
+  id: number;
+  title: string;
+  dueDate: string;
+  priority: Priority;
+  done: boolean;
+}
+
+export interface TasksData {
+  tasks: PortalTask[];
+}
+
 /** Everything the portal pages load from the Java API. */
 @Injectable({ providedIn: 'root' })
 export class PortalService {
@@ -205,6 +219,18 @@ export class PortalService {
 
   sendMessage(recipient: string, body: string): Promise<MessagesData> {
     return this.request<MessagesData>('POST', '/messages', { recipient, body });
+  }
+
+  tasks(): Promise<TasksData> {
+    return this.request<TasksData>('GET', '/tasks');
+  }
+
+  addTask(title: string, dueDate: string, priority: Priority): Promise<TasksData> {
+    return this.request<TasksData>('POST', '/tasks', { title, dueDate, priority });
+  }
+
+  setTaskDone(id: number, done: boolean): Promise<TasksData> {
+    return this.request<TasksData>('POST', '/tasks/done', { id, done });
   }
 
   private async request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
